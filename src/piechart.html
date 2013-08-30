@@ -13,7 +13,7 @@
         sb.bind('keypress', function(e) {
           if (e.keyCode == 13) {
             // execute search query
-            var q = "SELECT C ";
+            var q = "SELECT C WHERE C LIKE '%" + sb.val() + "%' ";
             query.setQuery(q);
             query.send(handle2);
             // update db click count
