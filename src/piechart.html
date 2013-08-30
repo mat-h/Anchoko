@@ -3,9 +3,24 @@
     <!--Load the AJAX API-->
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript"> 
-      google.load('visualization', '1', {packages: ['corechart']});
+      google.load('visualization', '1', {packages: ['corechart', 'table']});
     </script>
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
     <script type="text/javascript">
+      $(document).ready(function () {
+        var sb = $('#searchBox');
+        sb.focus();
+        sb.bind('keypress', function(e) {
+          if (e.keyCode == 13) {
+            // execute search query
+            var q = "SELECT C ";
+            query.setQuery(q);
+            query.send(handle2);
+            // update db click count
+          }
+        });
+      });
+    
       // https://docs.google.com/spreadsheet/ccc?key=0AmtOiQCX8aUIdGxUNF91Q3hmbHdmX2UybDUzMkI5Y1E#gid=0
       var ssKey = '0AmtOiQCX8aUIdGxUNF91Q3hmbHdmX2UybDUzMkI5Y1E';
       var query = new google.visualization.Query(
@@ -14,16 +29,23 @@
 		   query.send(handleSelectResponse);
       
       function handleSelectResponse(response) {
+        handleSelectResponseWithFunction(response, drawChart);
+      }
+      
+      function handle2(response) {
+        handleSelectResponseWithFunction(response, drawList);
+      }
+      
+      function handleSelectResponseWithFunction(response, f) {
         if (response.isError()) {
           alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
           return;
         }
         var data = response.getDataTable();
         
-        drawChart(data);
+        f(data);
       }
       
-
       // Callback that creates and populates a data table,
       // instantiates the pie chart, passes in the data and
       // draws it.
@@ -40,6 +62,7 @@
           rows[i] = [p[1].v, 1];
         }
         data.addRows(rows);
+        
         // Set chart options
         var options = {'title':'How Often For Each Expression I Depend On',
                        'width':600,
@@ -49,11 +72,31 @@
         var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
         chart.draw(data, options);
       }
+      
+      function drawList(dataSource) {
+        
+        // Create the data table.
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Sentence');
+        
+        // Interpolate the internal data.
+        var rows = new Array(dataSource.J.length);
+        for (var i=0; i<dataSource.J.length; i++) {
+          var p = dataSource.J[i].c;
+          rows[i] = [p[0].v];
+        }
+        data.addRows(rows);
+        
+        // Instantiate and draw a table.
+        var table = new google.visualization.Table(document.getElementById('sel_div'));
+        table.draw(data, {showRowNumber: false});
+      }
     </script>
   </head>
 
   <body>
-    <!--Div that will hold the pie chart-->
+    <input id="searchBox" value="">
+    <div id="sel_div"></div>
     <div id="chart_div"></div>
   </body>
 </html>
