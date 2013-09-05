@@ -8,25 +8,71 @@
     </script>
     <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
     <script type="text/javascript">
+      var sel_num = 0;
+    
+    
       $(document).ready(function () {
         var sb = $('#searchBox');
+        var val = sb.val();
         sb.focus();
         sb.bind('keypress', function(e) {
           if (e.keyCode == 13) {
             // execute search query
-            var q = "SELECT C WHERE C LIKE '%" + sb.val() + "%' ";
+            var q = "SELECT C WHERE C LIKE '%" + val + "%' ";
             query.setQuery(q);
             query.send(handle2);
             // update db click count
+          } else if (e.keyCode == 9) {
+            sel_num++;
+            var table = document.getElementById('sel_div').childNodes[0].childNodes[0].childNodes[0];
+            if (!!table && sel_num == table.rows.length - 1) {
+              sel_num = 0;
+            }
+            
+            for (var i=1; i<table.rows.length; i++) {
+              var td = table.rows[i].childNodes[0];
+              $(table.rows[i]).removeClass("google-visualization-table-tr-sel");
+              if (i==sel_num+1) {
+                $(table.rows[i]).addClass("google-visualization-table-tr-sel");
+              }
+            }
+            
+            return false;
+          } else if (e.which == 99) {
+            if (e.ctrlKey) {
+              // copy and paste!!
+              var table = document.getElementById('sel_div').childNodes[0].childNodes[0].childNodes[0];
+              var sentence = table.rows[sel_num+1].childNodes[0].textContent;
+              window.setTimeout(function () {
+                document.getElementById('tmp').parentNode.removeChild(document.getElementById('tmp'));
+                $('#searchBox').focus();
+              }, 1000);
+              copyToClipBoard(sentence);
+              
+              /*$.Deferred().then(function () {
+                copyToClipBoard(sentence);
+              }).then(function () {
+                document.getElementById('tmp').parentNode.removeChild(document.getElementById('tmp'));
+                $('#searchBox').focus();
+              });*/
+            }
           }
         });
       });
+      
+      function copyToClipBoard(txt) {
+        var copyArea = $('<textarea id="tmp" />');
+        copyArea.text(txt);
+        $("body").append(copyArea);
+        copyArea.select();
+        document.execCommand("copy");
+      }
     
       // https://docs.google.com/spreadsheet/ccc?key=0AmtOiQCX8aUIdGxUNF91Q3hmbHdmX2UybDUzMkI5Y1E#gid=0
       var ssKey = '0AmtOiQCX8aUIdGxUNF91Q3hmbHdmX2UybDUzMkI5Y1E';
       var query = new google.visualization.Query(
           'http://docs.google.com/spreadsheet/tq?key='+ssKey+'&pub=1');
-		   query.setQuery("SELECT A, C ");
+		   query.setQuery("SELECT A, SUM(E) GROUP BY A ");
 		   query.send(handleSelectResponse);
       
       function handleSelectResponse(response) {
@@ -60,7 +106,7 @@
         var rows = new Array(dataSource.J.length);
         for (var i=0; i<dataSource.J.length; i++) {
           var p = dataSource.J[i].c;
-          rows[i] = [p[1].v, 1];
+          rows[i] = [p[0].v, p[1].v];
         }
         data.addRows(rows);
         
