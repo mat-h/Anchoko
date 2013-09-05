@@ -23,10 +23,18 @@
             query.send(handle2);
             // update db click count
           } else if (e.keyCode == 9) {
-            sel_num++;
             var table = document.getElementById('sel_div').childNodes[0].childNodes[0].childNodes[0];
-            if (!!table && sel_num == table.rows.length - 1) {
-              sel_num = 0;
+
+            if (e.shiftKey) {
+              sel_num--;
+              if (sel_num < 0) {
+                sel_num = table.rows.length - 2;
+              }
+            } else {
+              sel_num++;
+              if (!!table && sel_num == table.rows.length - 1) {
+                sel_num = 0;
+              }
             }
             
             for (var i=1; i<table.rows.length; i++) {
@@ -45,6 +53,7 @@
               var sentence = table.rows[sel_num+1].childNodes[0].textContent;
               window.setTimeout(function () {
                 document.getElementById('tmp').parentNode.removeChild(document.getElementById('tmp'));
+                $('#msg').hide();
                 $('#searchBox').focus();
               }, 1000);
               copyToClipBoard(sentence);
@@ -61,10 +70,11 @@
       });
       
       function copyToClipBoard(txt) {
-        var copyArea = $('<textarea id="tmp" />');
+        var copyArea = $('<textarea id="tmp" cols="50"/>');
         copyArea.text(txt);
         $("body").append(copyArea);
         copyArea.select();
+        $("#msg").show();
         document.execCommand("copy");
       }
     
@@ -145,5 +155,6 @@
     <input id="searchBox" value=""><a href="https://docs.google.com/spreadsheet/ccc?key=0AmtOiQCX8aUIdGxUNF91Q3hmbHdmX2UybDUzMkI5Y1E#gid=0" target="blank">マスタを編集</a>
     <div id="sel_div"></div>
     <div id="chart_div"></div>
+    <div id="msg" style="display:none;">You Copy?</div>
   </body>
 </html>
